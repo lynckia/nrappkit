@@ -114,4 +114,4 @@ install(TARGETS nrappkit
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
 
-install(DIRECTORY ${nrappkit__include_dirs} DESTINATION include)
+install(DIRECTORY ${nrappkit__include_dirs} DESTINATION ${NRAPPKIT_BUILD}/include FILES_MATCHING PATTERN "*.h")
