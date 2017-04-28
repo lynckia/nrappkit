@@ -4,12 +4,10 @@ project(nrappkit)
 
 set(NRAPPKIT_BUILD "${CMAKE_CURRENT_BINARY_DIR}")
 
-set(obj "${NRAPPKIT_BUILD}/obj")
-
 set(CMAKE_C_OUTPUT_EXTENSION_REPLACE 1)
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
-set (NRAPPKIT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
+set(NRAPPKIT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND nrappkit__c_srcs
   "${NRAPPKIT_SOURCE}/src/util/libekr/r_assoc.c"
@@ -81,12 +79,12 @@ set_target_properties(nrappkit PROPERTIES EXCLUDE_FROM_ALL "FALSE")
 
 set_source_files_properties(${nrappkit__other_srcs} PROPERTIES HEADER_FILE_ONLY "TRUE")
 
-set_target_properties(nrappkit PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${obj}.${TOOLSET}/third_party/nrappkit")
+set_target_properties(nrappkit PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "nrappkit")
 set_target_properties(nrappkit PROPERTIES PREFIX "lib")
 set_target_properties(nrappkit PROPERTIES ARCHIVE_OUTPUT_NAME "nrappkit")
 set_target_properties(nrappkit PROPERTIES SUFFIX ".a")
 
-set_source_files_properties(${obj}.${TOOLSET}/third_party/nrappkit/libnrappkit.a PROPERTIES GENERATED "TRUE")
+set_source_files_properties(nrappkit/libnrappkit.a PROPERTIES GENERATED "TRUE")
 
 list(APPEND nrappkit__include_dirs
   "${NRAPPKIT_SOURCE}/src/event"
@@ -110,5 +108,3 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 set_target_properties(nrappkit PROPERTIES COMPILE_FLAGS "-g -fPIC -Wall -Wno-parentheses -Wno-strict-prototypes -Wmissing-prototypes -DNO_REG_RPC=1 -DHAVE_VFPRINTF=1 -DRETSIGTYPE=void -DNEW_STDIO -DHAVE_STRDUP=1 -DHAVE_STRLCPY=1 -DHAVE_LIBM=1 -DHAVE_SYS_TIME_H=1 -DTIME_WITH_SYS_TIME_H=1 -${NRAPPKIT_OS} -D__UNUSED__=\"__attribute__((unused))\"")
 
 set_property(TARGET nrappkit APPEND PROPERTY INCLUDE_DIRECTORIES ${nrappkit__include_dirs})
-
-target_link_libraries(nrappkit)
