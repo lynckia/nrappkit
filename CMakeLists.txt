@@ -124,4 +124,4 @@ list(APPEND nrappkit__include_public_dirs
 
 target_include_directories(nrappkit PUBLIC ${nrappkit__include_public_dirs})
 
-install(DIRECTORY ${nrappkit__include_public_dirs} DESTINATION ${NRAPPKIT_BUILD}/include FILES_MATCHING PATTERN "**.h")
+install(DIRECTORY ${nrappkit__include_public_dirs} DESTINATION include FILES_MATCHING PATTERN "**.h")
