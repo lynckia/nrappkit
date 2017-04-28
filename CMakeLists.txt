@@ -92,6 +92,7 @@ list(APPEND nrappkit__include_dirs
   "${NRAPPKIT_SOURCE}/src/port/generic/include"
   "${NRAPPKIT_SOURCE}/src/registry"
   "${NRAPPKIT_SOURCE}/src/share"
+  "${NRAPPKIT_SOURCE}/src/plugin"
   "${NRAPPKIT_SOURCE}/src/stats"
   "${NRAPPKIT_SOURCE}/src/util"
   "${NRAPPKIT_SOURCE}/src/util/libekr")
@@ -116,6 +117,7 @@ install(TARGETS nrappkit
 list(APPEND nrappkit__include_public_dirs
   "${NRAPPKIT_SOURCE}/src/event"
   "${NRAPPKIT_SOURCE}/src/log"
+  "${NRAPPKIT_SOURCE}/src/plugin"
   "${NRAPPKIT_SOURCE}/src/port"
   "${NRAPPKIT_SOURCE}/src/registry"
   "${NRAPPKIT_SOURCE}/src/share"
