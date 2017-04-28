@@ -88,7 +88,6 @@ set_source_files_properties(nrappkit/libnrappkit.a PROPERTIES GENERATED "TRUE")
 
 list(APPEND nrappkit__include_dirs
   "${NRAPPKIT_SOURCE}/src/event"
-  "${NRAPPKIT_SOURCE}/src/nrsh/config"
   "${NRAPPKIT_SOURCE}/src/log"
   "${NRAPPKIT_SOURCE}/src/port/generic/include"
   "${NRAPPKIT_SOURCE}/src/registry"
@@ -108,3 +107,11 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 set_target_properties(nrappkit PROPERTIES COMPILE_FLAGS "-g -fPIC -Wall -Wno-parentheses -Wno-strict-prototypes -Wmissing-prototypes -DNO_REG_RPC=1 -DHAVE_VFPRINTF=1 -DRETSIGTYPE=void -DNEW_STDIO -DHAVE_STRDUP=1 -DHAVE_STRLCPY=1 -DHAVE_LIBM=1 -DHAVE_SYS_TIME_H=1 -DTIME_WITH_SYS_TIME_H=1 -${NRAPPKIT_OS} -D__UNUSED__=\"__attribute__((unused))\"")
 
 set_property(TARGET nrappkit APPEND PROPERTY INCLUDE_DIRECTORIES ${nrappkit__include_dirs})
+
+target_include_directories(nrappkit PUBLIC ${nrappkit__include_dirs})
+
+install(TARGETS nrappkit
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)
+
+install(DIRECTORY ${nrappkit__include_dirs} DESTINATION include)
