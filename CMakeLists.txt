@@ -108,10 +108,20 @@ set_target_properties(nrappkit PROPERTIES COMPILE_FLAGS "-g -fPIC -Wall -Wno-par
 
 set_property(TARGET nrappkit APPEND PROPERTY INCLUDE_DIRECTORIES ${nrappkit__include_dirs})
 
-target_include_directories(nrappkit PUBLIC ${nrappkit__include_dirs})
 
 install(TARGETS nrappkit
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
 
-install(DIRECTORY ${nrappkit__include_dirs} DESTINATION include FILES_MATCHING PATTERN "*.h")
+list(APPEND nrappkit__include_public_dirs
+  "${NRAPPKIT_SOURCE}/src/event"
+  "${NRAPPKIT_SOURCE}/src/log"
+  "${NRAPPKIT_SOURCE}/src/port"
+  "${NRAPPKIT_SOURCE}/src/registry"
+  "${NRAPPKIT_SOURCE}/src/share"
+  "${NRAPPKIT_SOURCE}/src/stats"
+  "${NRAPPKIT_SOURCE}/src/util")
+
+target_include_directories(nrappkit PUBLIC ${nrappkit__include_public_dirs})
+
+install(DIRECTORY ${nrappkit__include_public_dirs} DESTINATION ${NRAPPKIT_BUILD}/include FILES_MATCHING PATTERN "**.h")
