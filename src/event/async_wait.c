@@ -1,37 +1,37 @@
 /**
    NR_async_wait.c
 
-   
+
    Copyright (C) 2001-2003, Network Resonance, Inc.
    Copyright (C) 2006, Network Resonance, Inc.
    All Rights Reserved
-   
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
-   
+
    1. Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
    2. Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
    3. Neither the name of Network Resonance, Inc. nor the name of any
-      contributors to this software may be used to endorse or promote 
+      contributors to this software may be used to endorse or promote
       products derived from this software without specific prior written
       permission.
-   
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
-   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    POSSIBILITY OF SUCH DAMAGE.
-   
+
 
    ekr@rtfm.com  Thu Dec 20 20:14:44 2001
  */
@@ -56,7 +56,7 @@ static TAILQ_HEAD(cb_q_head,callback_) q_head,free_q,w_q_head;
 static callback *w_q_n1;
 static int initialized=0;
 
-#define SOCKET_VEC_SIZE 256
+#define SOCKET_VEC_SIZE 1024
 #define ASYNC_WAIT_TYPES 2
 
 #ifdef WIN32
@@ -83,10 +83,10 @@ int NR_async_wait_init()
 
     if(initialized)
       return(0);
-    
+
     TAILQ_INIT(&q_head);
     TAILQ_INIT(&free_q);
-    
+
 #ifdef WIN32
     TAILQ_INIT(&sock_cbs_q);
 #else
@@ -207,7 +207,7 @@ int NR_async_cancel(sock,how)
       while(c){
         if(c->resource==sock && c->how==how)
           break;
-        
+
         c=TAILQ_NEXT(c,entry);
       }
       if(c)
@@ -228,7 +228,7 @@ int NR_async_schedule(cb,cb_arg,func,line)
     callback *cbb=0;
     int r,_status;
 
-    INITIALIZE;    
+    INITIALIZE;
     if(r=nr_async_create_cb(cb,cb_arg,-1,-1,func,line,&cbb))
       ABORT(R_NO_MEMORY);
     TAILQ_INSERT_TAIL(&q_head,cbb,entry);
@@ -244,7 +244,7 @@ int NR_async_event_wait(eventsp)
   {
     return(NR_async_event_wait2(eventsp,0));
   }
-    
+
 int NR_async_event_wait2(eventsp,tv)
   int *eventsp;
   struct timeval *tv;
@@ -265,7 +265,7 @@ int NR_async_event_wait2(eventsp,tv)
 
     FD_ZERO(&fd_read);
     FD_ZERO(&fd_write);
-    
+
 #ifdef WIN32
     TAILQ_FOREACH(sc, &sock_cbs_q, entry) {
       if(sc->cbs[0]) { FD_SET(sc->sock,&fd_read); maxfd++;}
@@ -274,7 +274,7 @@ int NR_async_event_wait2(eventsp,tv)
 #else
     for(i=0;i<SOCKET_VEC_SIZE;i++){
       if(socket_vec[i][0]) {FD_SET(i,&fd_read); maxfd=i;}
-      if(socket_vec[i][1]) {FD_SET(i,&fd_write); maxfd=i;}      
+      if(socket_vec[i][1]) {FD_SET(i,&fd_write); maxfd=i;}
     }
 #endif
 
@@ -292,7 +292,7 @@ int NR_async_event_wait2(eventsp,tv)
         if(tv && TAILQ_EMPTY(&q_head) && (tv->tv_sec || tv->tv_usec))
           ABORT(R_WOULDBLOCK);
       }
-      
+
 #ifdef WIN32
       if(r==SOCKET_ERROR){
         if(WSAGetLastError()!=WSAEINTR)
@@ -341,12 +341,12 @@ int NR_async_event_wait2(eventsp,tv)
       }
 #endif
     }
-    
+
     /* Now make a temporary list and then zero the working list */
     //memcpy(&w_q_head,&q_head,sizeof(q_head));
     w_q_head.tqh_first=q_head.tqh_first;
     w_q_head.tqh_last=q_head.tqh_last;
-    
+
     TAILQ_INIT(&q_head);
 
       /* Finally, walk through the list and fire the callbacks */
@@ -357,7 +357,7 @@ int NR_async_event_wait2(eventsp,tv)
       events++;
 #ifdef NR_DEBUG_ASYNC
       fprintf(stderr,"Firing %s(%d,%d,%d)\n","UNKNOWN",w_q_n1->resource,w_q_n1->how,n1->arg);
-#endif      
+#endif
       if(w_q_n1->cb){
         w_q_n1->cb(w_q_n1->resource,w_q_n1->how,w_q_n1->arg);
       }
@@ -391,17 +391,17 @@ int nr_async_create_cb(cb,arg,how,resource,func,line,cbp)
       cbb=TAILQ_FIRST(&free_q);
       TAILQ_REMOVE(&free_q,cbb,entry);
     }
-#ifdef SANITY_CHECKS    
+#ifdef SANITY_CHECKS
     memset(cbb,0,sizeof(callback));
 #endif
-    
+
     cbb->cb=cb;
     cbb->arg=arg;
     cbb->how=how;
     cbb->resource=resource;
     cbb->func=func;
     cbb->line=line;
-    
+
     *cbp=cbb;
     _status=0;
   abort:
@@ -422,20 +422,12 @@ int nr_async_destroy_cb(cbp)
     cb=*cbp;
     *cbp=0;
 
-#ifdef SANITY_CHECKS    
+#ifdef SANITY_CHECKS
     memset(cb,0xff,sizeof(callback));
 #endif
-    
+
     /* Now put it on the free queue */
     TAILQ_INSERT_TAIL(&free_q,cb,entry);
-    
+
     return(0);
   }
-
-
-    
-
-
-    
-  
-  
