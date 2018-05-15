@@ -42,6 +42,7 @@ static char *RCSSTRING __UNUSED__ ="$Id: r_log.c,v 1.11 2013/03/02 05:52:23 adam
 
 #ifdef LINUX
 #define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #endif
 
 #include "r_log.h"
