@@ -294,7 +294,7 @@ int NR_async_event_wait2(eventsp,tv)
 
     INITIALIZE;
 
-    r = epoll_wait(epollfd, events, MAX_EVENTS, TAILQ_EMPTY(&q_head)?millis:-1);
+    r = epoll_wait(epollfd, events, MAX_EVENTS, TAILQ_EMPTY(&q_head)?millis:100);
     if (r == -1) {
       ABORT(R_INTERNAL);
     }
