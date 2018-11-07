@@ -109,7 +109,6 @@ int NR_async_wait_init()
 #ifdef USE_EPOLL
   epollfd = epoll_create1(0);
   if (epollfd == -1) {
-    printf("noooo0!\n");
     return (-1);
   }
 #endif
@@ -179,7 +178,6 @@ int NR_async_wait(sock,how,cb,cb_arg,func,line)
     ev.data.fd = sock;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sock, &ev) == -1) {
       if(errno != EEXIST) {
-        printf("noooo1!\n");
         ABORT(R_INTERNAL);
       }
     }
@@ -234,7 +232,6 @@ int NR_async_cancel(sock,how)
     ev.data.fd = sock;
     if (epoll_ctl(epollfd, EPOLL_CTL_DEL, sock, &ev) == -1) {
       if(errno != ENOENT) {
-        printf("noooo2!\n");
         ABORT(R_INTERNAL);
       }
     }
@@ -299,7 +296,6 @@ int NR_async_event_wait2(eventsp,tv)
 
     r = epoll_wait(epollfd, events, MAX_EVENTS, TAILQ_EMPTY(&q_head)?millis:-1);
     if (r == -1) {
-      printf("noooo3!\n");
       ABORT(R_INTERNAL);
     }
     if(r>0){
