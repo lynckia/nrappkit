@@ -41,6 +41,9 @@ static char *RCSSTRING __UNUSED__ ="$Id: async_wait.c,v 1.7 2008/01/23 23:06:50 
 
 #include <sys/queue.h>
 #include <sys/types.h>
+#ifdef USE_EPOLL
+#include <sys/epoll.h>
+#endif
 #ifndef WIN32
 #include <unistd.h>
 #endif
@@ -56,8 +59,14 @@ static TAILQ_HEAD(cb_q_head,callback_) q_head,free_q,w_q_head;
 static callback *w_q_n1;
 static int initialized=0;
 
-#define SOCKET_VEC_SIZE 1024
+#define SOCKET_VEC_SIZE 20000
 #define ASYNC_WAIT_TYPES 2
+
+#ifdef USE_EPOLL
+#define MAX_EVENTS 500
+struct epoll_event ev, events[MAX_EVENTS];
+static int epollfd;
+#endif
 
 #ifdef WIN32
 typedef struct sock_cbs_ {
@@ -95,6 +104,14 @@ int NR_async_wait_init()
         socket_vec[i][j]=0;
       }
     }
+#endif
+
+#ifdef USE_EPOLL
+  epollfd = epoll_create1(0);
+  if (epollfd == -1) {
+    printf("noooo0!\n");
+    return (-1);
+  }
 #endif
 
     initialized=1;
@@ -156,6 +173,17 @@ int NR_async_wait(sock,how,cb,cb_arg,func,line)
       nr_async_destroy_cb(&socket_vec[sock][how]);
     if(r=nr_async_create_cb(cb,cb_arg,how,sock,func,line,&cbb))
       ABORT(R_NO_MEMORY);
+
+#ifdef USE_EPOLL
+    ev.events = EPOLLIN | EPOLLOUT;
+    ev.data.fd = sock;
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sock, &ev) == -1) {
+      if(errno != EEXIST) {
+        printf("noooo1!\n");
+        ABORT(R_INTERNAL);
+      }
+    }
+#endif
     socket_vec[sock][how]=cbb;
 #endif
 
@@ -199,6 +227,17 @@ int NR_async_cancel(sock,how)
 
     if(socket_vec[sock][how])
       nr_async_destroy_cb(&socket_vec[sock][how]);
+#endif
+
+#ifdef USE_EPOLL
+    ev.events = EPOLLIN | EPOLLOUT;
+    ev.data.fd = sock;
+    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, sock, &ev) == -1) {
+      if(errno != ENOENT) {
+        printf("noooo2!\n");
+        ABORT(R_INTERNAL);
+      }
+    }
 #endif
 
     /* Also cancel anything queued */
@@ -245,6 +284,72 @@ int NR_async_event_wait(eventsp)
     return(NR_async_event_wait2(eventsp,0));
   }
 
+#ifdef USE_EPOLL
+int NR_async_event_wait2(eventsp,tv)
+  int *eventsp;
+  struct timeval *tv;
+  {
+    int r,_status;
+    callback *n2;
+    int millis = (tv->tv_sec * (uint64_t)1000) + (tv->tv_usec / 1000);
+    int n;
+    int evts;
+
+    INITIALIZE;
+
+    r = epoll_wait(epollfd, events, MAX_EVENTS, TAILQ_EMPTY(&q_head)?millis:-1);
+    if (r == -1) {
+      printf("noooo3!\n");
+      ABORT(R_INTERNAL);
+    }
+    if(r>0){
+      for(n=0; n <= r; n++){
+        int i = events[n].data.fd;
+        if (socket_vec[i][0]) {
+          if(events[n].events & EPOLLIN) {
+            TAILQ_INSERT_TAIL(&q_head,socket_vec[i][0],entry);
+            socket_vec[i][0]=0;
+          }
+        }
+        if (socket_vec[i][1]) {
+          if(events[n].events & EPOLLOUT) {
+            TAILQ_INSERT_TAIL(&q_head,socket_vec[i][1],entry);
+            socket_vec[i][1]=0;
+          }
+        }
+      }
+    }
+
+    /* Now make a temporary list and then zero the working list */
+    //memcpy(&w_q_head,&q_head,sizeof(q_head));
+    w_q_head.tqh_first=q_head.tqh_first;
+    w_q_head.tqh_last=q_head.tqh_last;
+
+    TAILQ_INIT(&q_head);
+
+      /* Finally, walk through the list and fire the callbacks */
+    evts=0;
+    w_q_n1=TAILQ_FIRST(&w_q_head);
+    while(w_q_n1){
+      n2=TAILQ_NEXT(w_q_n1,entry);
+      evts++;
+#ifdef NR_DEBUG_ASYNC
+      fprintf(stderr,"Firing %s(%d,%d,%d)\n","UNKNOWN",w_q_n1->resource,w_q_n1->how,n1->arg);
+#endif
+      if(w_q_n1->cb){
+        w_q_n1->cb(w_q_n1->resource,w_q_n1->how,w_q_n1->arg);
+      }
+      nr_async_destroy_cb(&w_q_n1);
+      w_q_n1=n2;
+    }
+
+    *eventsp=evts;
+    _status=0;
+  abort:
+    return(_status);
+  }
+
+#else
 int NR_async_event_wait2(eventsp,tv)
   int *eventsp;
   struct timeval *tv;
@@ -370,6 +475,7 @@ int NR_async_event_wait2(eventsp,tv)
   abort:
     return(_status);
   }
+#endif
 
 int nr_async_create_cb(cb,arg,how,resource,func,line,cbp)
   NR_async_cb cb;
