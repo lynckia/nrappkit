@@ -288,16 +288,17 @@ int NR_async_event_wait2(eventsp,tv)
   {
     int r,_status;
     callback *n2;
-    int millis = (tv->tv_sec * (uint64_t)1000) + (tv->tv_usec / 1000);
+    int millis = tv ? (tv->tv_sec * (uint64_t)1000) + (tv->tv_usec / 1000) : -1;
     int n;
     int evts;
 
     INITIALIZE;
 
-    r = epoll_wait(epollfd, events, MAX_EVENTS, TAILQ_EMPTY(&q_head)?millis:-1);
+    r = epoll_wait(epollfd, events, MAX_EVENTS, TAILQ_EMPTY(&q_head) ? millis : 10);
     if (r == -1) {
       ABORT(R_INTERNAL);
     }
+    int reads = 0;
     if(r>0){
       for(n=0; n <= r; n++){
         int i = events[n].data.fd;
@@ -305,6 +306,7 @@ int NR_async_event_wait2(eventsp,tv)
           if(events[n].events & EPOLLIN) {
             TAILQ_INSERT_TAIL(&q_head,socket_vec[i][0],entry);
             socket_vec[i][0]=0;
+            reads++;
           }
         }
         if (socket_vec[i][1]) {
@@ -314,7 +316,10 @@ int NR_async_event_wait2(eventsp,tv)
           }
         }
       }
+    } else {
+      ABORT(R_EOD);
     }
+
 
     /* Now make a temporary list and then zero the working list */
     //memcpy(&w_q_head,&q_head,sizeof(q_head));
@@ -338,7 +343,9 @@ int NR_async_event_wait2(eventsp,tv)
       nr_async_destroy_cb(&w_q_n1);
       w_q_n1=n2;
     }
-
+    if (reads == 0) {
+      ABORT(R_EOD);
+    }
     *eventsp=evts;
     _status=0;
   abort:
