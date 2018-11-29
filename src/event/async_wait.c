@@ -299,20 +299,20 @@ int NR_async_event_wait2(eventsp,tv)
       ABORT(R_INTERNAL);
     }
     int reads = 0;
-    if(r>0){
-      for(n=0; n <= r; n++){
+    if (r > 0) {
+      for (n=0; n < r; n++) {
         int i = events[n].data.fd;
         if (socket_vec[i][0]) {
-          if(events[n].events & EPOLLIN) {
-            TAILQ_INSERT_TAIL(&q_head,socket_vec[i][0],entry);
-            socket_vec[i][0]=0;
+          if (events[n].events & EPOLLIN) {
+            TAILQ_INSERT_TAIL(&q_head, socket_vec[i][0], entry);
+            socket_vec[i][0] = 0;
             reads++;
           }
         }
         if (socket_vec[i][1]) {
-          if(events[n].events & EPOLLOUT) {
-            TAILQ_INSERT_TAIL(&q_head,socket_vec[i][1],entry);
-            socket_vec[i][1]=0;
+          if (events[n].events & EPOLLOUT) {
+            TAILQ_INSERT_TAIL(&q_head, socket_vec[i][1], entry);
+            socket_vec[i][1] = 0;
           }
         }
       }
