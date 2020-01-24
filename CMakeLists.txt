@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 2.6)
 
+find_package(PkgConfig)
+#functions
+function(test_lib LIB_NAME)
+  if (${LIB_NAME} MATCHES "^.*-NOTFOUND")
+    message(FATAL_ERROR "lib not found: " ${LIB_NAME} " check README")
+    return()
+  endif(${LIB_NAME} MATCHES "^.*-NOTFOUND")
+endfunction(test_lib)
+
 project(nrappkit)
 
 set(NRAPPKIT_BUILD "${CMAKE_CURRENT_BINARY_DIR}")
@@ -75,6 +84,12 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 add_library(nrappkit STATIC ${nrappkit__c_srcs} ${nrappkit__other_srcs})
 
+# OPENSSL
+find_library(SSL ssl HINTS "${THIRD_PARTY_LIB}")
+test_lib(${SSL})
+find_library(CRYPTO crypto HINTS "${THIRD_PARTY_LIB}")
+test_lib(${CRYPTO})
+
 set_target_properties(nrappkit PROPERTIES EXCLUDE_FROM_ALL "FALSE")
 
 set_source_files_properties(${nrappkit__other_srcs} PROPERTIES HEADER_FILE_ONLY "TRUE")
@@ -109,6 +124,7 @@ set_target_properties(nrappkit PROPERTIES COMPILE_FLAGS "-g -fPIC -Wall -Wno-par
 
 set_property(TARGET nrappkit APPEND PROPERTY INCLUDE_DIRECTORIES ${nrappkit__include_dirs})
 
+target_link_libraries(nrappkit PUBLIC ${SSL} ${CRYPTO})
 
 install(TARGETS nrappkit
         ARCHIVE DESTINATION lib
