@@ -89,8 +89,8 @@ static char *RCSSTRING __UNUSED__ =(char *)"$Id: r_data.c,v 1.2 2006/08/16 19:39
 
 int r_data_create(dp,d,l)
   Data **dp;
-  UCHAR *d;
-  int l;
+  const UCHAR *d;
+  size_t l;
   {
     Data *d_=0;
     int _status;
@@ -116,7 +116,7 @@ int r_data_create(dp,d,l)
 
 int r_data_alloc_mem(d,l)
   Data *d;
-  int l;
+  size_t l;
   {
     int _status;
     
@@ -131,7 +131,7 @@ int r_data_alloc_mem(d,l)
 
 int r_data_alloc(dp,l)
   Data **dp;
-  int l;
+  size_t l;
   {
     Data *d_=0;
     int _status;
@@ -154,8 +154,8 @@ int r_data_alloc(dp,l)
 
 int r_data_make(dp,d,l)
   Data *dp;
-  UCHAR *d;
-  int l;
+  const UCHAR *d;
+  size_t l;
   {
     if(!(dp->data=(UCHAR *)RMALLOC(l)))
       ERETURN(R_NO_MEMORY);
