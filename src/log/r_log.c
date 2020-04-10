@@ -36,10 +36,6 @@
    ekr@rtfm.com  Mon Dec  3 15:24:38 2001
  */
 
-
-static char *RCSSTRING __UNUSED__ ="$Id: r_log.c,v 1.11 2013/03/02 05:52:23 adamroach Exp $";
-
-
 #ifdef LINUX
 #define _BSD_SOURCE
 #define _DEFAULT_SOURCE
