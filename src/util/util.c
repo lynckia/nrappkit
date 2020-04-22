@@ -36,9 +36,6 @@
    ekr@rtfm.com  Wed Dec 26 17:19:36 2001
  */
 
-
-static char *RCSSTRING __UNUSED__ ="$Id: util.c,v 1.6 2013/03/02 05:52:23 adamroach Exp $";
-
 #ifndef WIN32
 #include <sys/uio.h>
 #include <pwd.h>
