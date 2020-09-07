@@ -92,9 +92,9 @@
 #include "r_data.h"
 
 /* defines for possibly replaced functions */
-#ifndef HAVE_STRDUP
-char *strdup(char *in);
-#endif
+//#ifndef HAVE_STRDUP
+//char *strdup(char *in);
+//#endif
 
 #endif
 
